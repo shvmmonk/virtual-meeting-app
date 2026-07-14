@@ -23,5 +23,19 @@ chairs.forEach((chair , index) => {
     chair.addEventListener("click" , () =>{
         chair.classList.toggle("active");
     })
+
+    const muteBtn = chair.querySelector(".mute-btn");
+
+    muteBtn.addEventListener("click" , () => {
+        event.stopPropagation();
+
+        const isMuted = muteBtn.textContent === "🎤";
+
+        if(isMuted){
+            muteBtn.textContent = "🔇";
+        } else{
+            muteBtn.textContent = "🎤";
+        }
+    })
 })
 
