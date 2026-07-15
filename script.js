@@ -49,3 +49,22 @@ leavebtn.addEventListener("click", () => {
     document.body.innerHTML += "<h1 style='color: white; font-family: sans-serif;'>You left the meeting</h1>";
 });
 
+const addBtn = document.querySelector(".add-participant-btn");
+let participantCount = participants.length;
+
+addBtn.addEventListener("click" , () =>{
+    participantCount++;
+
+    const newChair = document.createElement("div");
+    newChair.classList.add("chair");
+
+    newChair.innerHTML = `
+     <div class="avatar" style="background-color: #ffffff;"></div>
+        <p class="participant-name">User ${participantCount}</p>
+        <button class="mute-btn">🎤</button>
+        `;
+
+        document.querySelector(".container").appendChild(newChair);
+
+});
+

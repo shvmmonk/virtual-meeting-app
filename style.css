@@ -5,12 +5,14 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    position: relative;
 }
 
 .container{
     display: grid;
     grid-template-columns: repeat(2,1fr);
     gap: 40px;
+    margin-top: 60px;
 }
 
 .chair{
@@ -63,4 +65,17 @@ body {
     font-size: 25px;
     cursor: pointer;
     background-color:#2c2f33 ;
+}
+
+.add-participant-btn{
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background-color: #43b581;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
 }
