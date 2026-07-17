@@ -40,14 +40,33 @@ virtual-meeting-app/
 - No real video/audio — avatars are static colored circles as placeholders.
 - No backend — all data is local, dummy, and resets on page refresh.
 
-## Roadmap
+## Future Improvements
 
-- [ ] Migrate this prototype into **React** (component-based structure: `<Chair />`, `<Avatar />`, `<MuteButton />`)
-- [ ] Add real-time communication using **WebRTC**
-- [ ] Add backend with **Spring Boot** (auth, room management, REST APIs)
-- [ ] Add **WebSockets** for real-time state sync (chat, join/leave events)
-- [ ] Explore **Three.js** or **Canvas** for richer avatar movement/customization
-- [ ] Add STUN/TURN servers and a media server (e.g. LiveKit) for scalable video
+### Frontend
+- [ ] Migrate this prototype into **React** (component-based structure: `<Chair />`, `<Avatar />`, `<MuteButton />`, `<LeaveButton />`)
+- [ ] Manage participants with `useState` instead of manual DOM manipulation
+- [ ] Fix **event delegation** so dynamically added participants support click-to-select and mute (native React re-render will solve this automatically)
+- [ ] Add a "Rejoin Meeting" option after leaving (instead of a dead-end message)
+- [ ] Avatar customization screen (choose color/style, like Bitmoji)
+- [ ] Explore **Three.js** or **Canvas** for richer avatar movement (e.g. dragging avatars between chairs, walking around a virtual room like Gather.town)
+- [ ] Responsive layout for mobile/tablet screens
+- [ ] "Raise hand" and emoji reaction features
+- [ ] In-meeting text chat box
+
+### Backend
+- [ ] Build backend with **Spring Boot** — user auth (Spring Security + JWT), meeting/room CRUD APIs, invite links
+- [ ] Add **WebSockets (STOMP)** for real-time sync — chat messages, join/leave events, mute status broadcast to all participants
+- [ ] Use **Redis** to manage live session/room state efficiently
+
+### Real-time Video/Audio
+- [ ] Integrate **WebRTC** for actual peer-to-peer audio/video calling
+- [ ] Set up **STUN/TURN servers** (e.g. coturn) so calls work across different networks
+- [ ] Add a media server (**LiveKit** or **mediasoup**) once user count grows beyond what peer-to-peer WebRTC can handle
+
+### Infrastructure / Deployment
+- [ ] Containerize with Docker for easier deployment
+- [ ] Deploy frontend + backend separately (e.g. Vercel/Netlify for frontend, Render/Railway for Spring Boot backend)
+- [ ] Add basic analytics (meeting duration, participant count)
 
 ## Status
 
