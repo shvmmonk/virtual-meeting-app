@@ -4,6 +4,38 @@ A simple front-end prototype for a virtual meeting app where participants are re
 
 This is an early-stage prototype built with **vanilla HTML, CSS, and JavaScript** as a learning project before migrating to React.
 
+## Original Idea / Vision
+
+The core idea: since remote work has made online meetings extremely common, build an app where instead of a plain grid of video tiles, people are represented by **Bitmoji-style avatars sitting in chairs**, like a virtual office. It should feel more personal and less "boxed-in" than a standard video call grid — inspired by tools like Gather.town, Teamflow/Spatial, and Microsoft Mesh, but with a stronger focus on customizable, cartoon-style avatars.
+
+Rough long-term picture of how it should feel:
+- Users get a **personalized avatar** (Bitmoji/Memoji-like) instead of just a webcam tile
+- Avatars **sit in chairs** in a virtual meeting room layout
+- Meeting basics: mute/unmute, leave, add/remove participants, active speaker highlight
+- Eventually: movement (walking between chairs/rooms), reactions, chat, and real audio/video — not just static avatars
+
+## My Learning Plan
+
+Current skill set going in: Java, HTML, CSS, JS, React (learning), and currently learning Spring Boot.
+
+Approach: build this project hands-on, step by step (one small step at a time), and learn new concepts as they're needed by the project rather than front-loading all theory first — with some exceptions where skipping ahead is risky.
+
+**React topics treated as must-learn before touching the React version of this project** (core of how the app will work):
+- Components
+- Props
+- State (`useState`)
+- Event Handling
+- Lists and Keys (`.map()` rendering — directly needed for rendering the participants array)
+
+**React topics okay to learn "on the fly" while building** (lower risk to pick up mid-project):
+- CSS in React
+- React Router DOM (needed later once there's a "Lobby" vs "Meeting Room" page)
+- Conditional Rendering
+- Forms & Controlled Components
+- `useEffect` (needed later for things like fetching data on load)
+
+Planned learning order once picking Spring Boot back up: Java + Spring Boot fundamentals in parallel with React, since the backend (auth, rooms, WebSockets) will eventually be built in Spring Boot.
+
 ## Features
 
 - 🪑 **Meeting room layout** — participants displayed as avatar cards in a responsive grid
