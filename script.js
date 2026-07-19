@@ -65,6 +65,7 @@ addBtn.addEventListener("click" , () =>{
         `;
 
         document.querySelector(".container").appendChild(newChair);
+        document.querySelector(".participant-count").textContent = `Total Participants: ${participantCount}`;
 
 });
 
