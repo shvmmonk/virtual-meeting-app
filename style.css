@@ -16,6 +16,7 @@ body {
 }
 
 .chair{
+    transition: transform 0.2s ease;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -23,6 +24,11 @@ body {
     padding: 20px;
     background-color: #3a3d42 ;
     border-radius: 12px;
+}
+
+.chair :hover{
+    transform: scale(1.05);
+    cursor: pointer;
 }
 
 .avatar{
