@@ -69,3 +69,18 @@ addBtn.addEventListener("click" , () =>{
 
 });
 
+ const removeBtn = document.querySelector(".remove-participant-btn");
+removeBtn.addEventListener("click" ,() =>{
+    const allchairs = document.querySelectorAll(".chair");
+
+    if(allchairs.length == 0){
+        return;
+    }
+
+    const lastChair = allchairs[allchairs.length - 1];
+    lastChair.remove(); //to remove the element from the DOM
+
+    participantCount--;
+    document.querySelector(".participant-count").textContent = `Total Participants: ${participantCount}`;
+})
+
