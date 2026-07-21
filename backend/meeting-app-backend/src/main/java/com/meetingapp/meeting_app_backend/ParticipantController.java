@@ -1,0 +1,19 @@
+package com.meetingapp.meeting_app_backend;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
+
+@RestController
+public class ParticipantController {
+
+    @GetMapping("/participants")
+    public List<Participant> getParticipants() {
+        return List.of(
+            new Participant("User 1", "#7289da"),
+            new Participant("User 2", "#43b581"),
+            new Participant("User 3", "#f04747"),
+            new Participant("User 4", "#faa61a")
+        );
+    }
+}
