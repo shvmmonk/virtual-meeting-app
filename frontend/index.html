@@ -98,16 +98,28 @@
     <div id="meeting-screen" class="screen" style="display:none;">
         <div class="meeting-header">
             <h2>Meeting Room</h2>
+            <span class="room-id-display" id="room-id-display"></span>
         </div>
-        <div class="container" id="meeting-container"></div>
+        <div class="meeting-body">
+            <div class="local-preview" id="local-preview">
+                <video id="local-video" autoplay muted playsinline></video>
+                <div class="local-avatar-overlay" id="local-avatar-overlay">
+                    <div class="avatar-circle" id="local-avatar-circle"></div>
+                </div>
+            </div>
+            <div class="container" id="meeting-container"></div>
+        </div>
         <div class="meeting-controls">
-            <span class="participant-count" id="participant-count">Participants: 1</span>
-            <button class="btn btn-secondary add-participant-btn" id="add-participant-btn">+ Add</button>
+            <span class="participant-count" id="participant-count">Participants: 0</span>
+            <button class="btn btn-secondary meeting-btn" id="mic-btn" title="Mute/Unmute">🎤</button>
+            <button class="btn btn-secondary meeting-btn" id="cam-btn" title="Camera On/Off">📷</button>
+            <button class="btn btn-secondary meeting-btn" id="screen-btn" title="Share Screen">🖥️</button>
             <button class="btn btn-danger leave-btn" id="leave-btn">Leave</button>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <script>
         // Mini OrbitControls for r128 (CDN-safe fallback)
         // Uses auto-rotation and basic drag-to-rotate
@@ -156,6 +168,8 @@
             };
         }
     </script>
+    <script src="js/signaling.js"></script>
+    <script src="js/webrtc.js"></script>
     <script src="js/avatar-builder.js"></script>
     <script src="js/script.js"></script>
 </body>
