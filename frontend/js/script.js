@@ -114,7 +114,8 @@ const App = (() => {
             id: userId,
             name: currentUser.name,
             muted: false,
-            handUp: false
+            handUp: false,
+            thumbnail: currentUser.avatarThumbnail
         }];
         renderParticipants();
     }
@@ -124,16 +125,17 @@ const App = (() => {
             id: p.userId,
             name: p.userName,
             muted: false,
-            handUp: false
+            handUp: false,
+            thumbnail: null
         }));
         const me = participants.find(p => p.id === userId);
-        if (!me) participants.unshift({ id: userId, name: currentUser.name, muted: false, handUp: false });
+        if (me) me.thumbnail = currentUser.avatarThumbnail;
         renderParticipants();
     }
 
     function handlePeerJoined(data) {
         if (!participants.find(p => p.id === data.userId)) {
-            participants.push({ id: data.userId, name: data.userName || 'Guest', muted: false, handUp: false });
+            participants.push({ id: data.userId, name: data.userName || 'Guest', muted: false, handUp: false, thumbnail: null });
             renderParticipants();
             setTimeout(() => WebRTCManager.createOffer(data.userId, getRemoteVideo(data.userId)), 500);
         }
@@ -183,7 +185,7 @@ const App = (() => {
                 <div class="chair-hand-icon">✋</div>
                 <div class="avatar">
                     <video autoplay playsinline muted id="remote-video-${p.id}" style="display:none;"></video>
-                    <div class="avatar-placeholder" id="placeholder-${p.id}">${initial}</div>
+                    ${p.thumbnail ? `<img src="${p.thumbnail}" alt="${p.name}" />` : `<div class="avatar-placeholder" id="placeholder-${p.id}" style="background:${p.color || '#7289da'}">${initial}</div>`}
                 </div>
                 <p class="participant-name">${p.name}</p>
                 <button class="mute-btn">${p.muted ? '🔇' : '🎤'}</button>
