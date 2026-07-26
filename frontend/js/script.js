@@ -102,14 +102,7 @@ const App = (() => {
             document.getElementById('local-video').hidden = false;
         }
 
-        try {
-            await Signaling.connect(SIGNALING_URL, roomId, userId);
-            isOffline = false;
-        } catch (e) {
-            isOffline = true;
-            document.getElementById('offline-badge').style.display = 'inline';
-        }
-
+        MeetingScene.init();
         participants = [{
             id: userId,
             name: currentUser.name,
@@ -117,6 +110,15 @@ const App = (() => {
             handUp: false,
             thumbnail: currentUser.avatarThumbnail
         }];
+        MeetingScene.updateAvatars(participants);
+
+        try {
+            await Signaling.connect(SIGNALING_URL, roomId, userId);
+            isOffline = false;
+        } catch (e) {
+            isOffline = true;
+            document.getElementById('offline-badge').style.display = 'inline';
+        }
         renderParticipants();
     }
 
@@ -162,71 +164,29 @@ const App = (() => {
     function handlePeerMute(data) {
         const p = participants.find(x => x.id === data.userId);
         if (p) p.muted = data.muted;
-        updateMuteIcon(data.userId, data.muted);
     }
 
     function getRemoteVideo(userId) {
-        const chair = document.querySelector(`.chair[data-id="${userId}"]`);
-        return chair ? chair.querySelector('video') : null;
+        return null;
     }
 
     function renderParticipants() {
-        const container = document.getElementById('meeting-container');
-        container.innerHTML = '';
-
-        participants.forEach(p => {
-            const chair = document.createElement('div');
-            chair.className = 'chair';
-            chair.dataset.id = p.id;
-            if (p.handUp) chair.classList.add('hand-raised');
-
-            const initial = p.name.charAt(0).toUpperCase();
-            chair.innerHTML = `
-                <div class="chair-hand-icon">✋</div>
-                <div class="avatar">
-                    <video autoplay playsinline muted id="remote-video-${p.id}" style="display:none;"></video>
-                    ${p.thumbnail ? `<img src="${p.thumbnail}" alt="${p.name}" />` : `<div class="avatar-placeholder" id="placeholder-${p.id}" style="background:${p.color || '#7289da'}">${initial}</div>`}
-                </div>
-                <p class="participant-name">${p.name}</p>
-                <button class="mute-btn">${p.muted ? '🔇' : '🎤'}</button>
-            `;
-
-            chair.addEventListener('click', () => {
-                document.querySelectorAll('.chair').forEach(c => {
-                    c.classList.remove('active', 'speaking');
-                });
-                chair.classList.add('active', 'speaking');
-                setTimeout(() => chair.classList.remove('speaking'), 2000);
-            });
-
-            const muteBtn = chair.querySelector('.mute-btn');
-            muteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (p.id === userId || isOffline) {
-                    p.muted = !p.muted;
-                    muteBtn.textContent = p.muted ? '🔇' : '🎤';
-                    if (p.id === userId) WebRTCManager.toggleAudio(!p.muted);
-                    if (!isOffline) Signaling.sendMuteStatus(p.muted);
-                }
-            });
-
-            container.appendChild(chair);
-        });
-
+        MeetingScene.updateAvatars(participants);
         if (isOffline) {
-            const controlsRow = document.createElement('div');
-            controlsRow.className = 'offline-controls';
-            controlsRow.innerHTML = `
-                <button class="add-local-btn" id="offline-add-btn">+ Add Local</button>
-                <button class="remove-local-btn" id="offline-remove-btn">- Remove</button>
-            `;
-            container.appendChild(controlsRow);
-            setTimeout(() => {
-                document.getElementById('offline-add-btn')?.addEventListener('click', addLocalParticipant);
-                document.getElementById('offline-remove-btn')?.addEventListener('click', removeLocalParticipant);
-            }, 0);
+            const controlsRow = document.getElementById('offline-controls-row');
+            if (!controlsRow) {
+                const row = document.createElement('div');
+                row.id = 'offline-controls-row';
+                row.style.cssText = 'position:absolute;bottom:100px;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:12px;';
+                row.innerHTML = `
+                    <button class="btn btn-secondary" id="offline-add-btn" style="width:auto;padding:10px 20px;">+ Add</button>
+                    <button class="btn btn-danger" id="offline-remove-btn" style="width:auto;padding:10px 20px;">- Remove</button>
+                `;
+                document.querySelector('.meeting-overlay').appendChild(row);
+                document.getElementById('offline-add-btn').onclick = addLocalParticipant;
+                document.getElementById('offline-remove-btn').onclick = removeLocalParticipant;
+            }
         }
-
         document.getElementById('participant-count').textContent = `Participants: ${participants.length}`;
     }
 
@@ -352,6 +312,8 @@ const App = (() => {
         document.getElementById('chat-panel').classList.remove('collapsed');
         chatVisible = true;
         document.getElementById('chat-messages').innerHTML = '';
+        const row = document.getElementById('offline-controls-row');
+        if (row) row.remove();
         showScreen('lobby');
     }
 
