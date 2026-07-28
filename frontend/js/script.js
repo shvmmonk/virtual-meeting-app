@@ -165,6 +165,7 @@ const App = (() => {
         }
 
         MeetingScene.init();
+        MeetingScene.initWalkers(3);
 
         participants = [{ id: userId, name: currentUser.name, muted: false, handUp: false, speaking: false, thumbnail: currentUser.avatarThumbnail }];
         MeetingScene.updateAvatars(participants);
@@ -310,9 +311,51 @@ const App = (() => {
 
     let isSharing = false;
     async function toggleScreenShare() {
-        if (isOffline) return;
-        if (isSharing) { WebRTCManager.stopScreenShare(); isSharing = false; document.getElementById('screen-btn').textContent = '🖥️'; document.getElementById('screen-btn').classList.remove('active-btn'); }
-        else { const s = await WebRTCManager.startScreenShare(); if (s) { isSharing = true; document.getElementById('screen-btn').textContent = '⏹️'; document.getElementById('screen-btn').classList.add('active-btn'); } }
+        if (isSharing) {
+            if (WebRTCManager.stopScreenShare) WebRTCManager.stopScreenShare();
+            isSharing = false;
+            document.getElementById('screen-btn').textContent = '🖥';
+            document.getElementById('screen-btn').classList.remove('active-btn');
+            MeetingScene.setScreenShareStream(null);
+        } else {
+            const s = await WebRTCManager.startScreenShare();
+            if (s) {
+                isSharing = true;
+                document.getElementById('screen-btn').textContent = '🖥';
+                document.getElementById('screen-btn').classList.add('active-btn');
+                MeetingScene.setScreenShareStream(s);
+            }
+        }
+        if (isOffline) {
+            if (isSharing) {
+                isSharing = false;
+                document.getElementById('screen-btn').textContent = '🖥';
+                document.getElementById('screen-btn').classList.remove('active-btn');
+                MeetingScene.setScreenShareStream(null);
+            } else {
+                const canvas = document.createElement('canvas');
+                canvas.width = 640; canvas.height = 360;
+                const ctx = canvas.getContext('2d');
+                const draw = () => {
+                    ctx.fillStyle = '#1a2744';
+                    ctx.fillRect(0, 0, 640, 360);
+                    ctx.fillStyle = '#4a7aff';
+                    ctx.font = 'bold 32px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('📄 Screen Share', 320, 140);
+                    ctx.font = '16px sans-serif';
+                    ctx.fillStyle = '#ffffff88';
+                    ctx.fillText('(Preview Mode)', 320, 190);
+                    requestAnimationFrame(draw);
+                };
+                draw();
+                const stream = canvas.captureStream(30);
+                isSharing = true;
+                document.getElementById('screen-btn').textContent = '🖥';
+                document.getElementById('screen-btn').classList.add('active-btn');
+                MeetingScene.setScreenShareStream(stream);
+            }
+        }
     }
 
     function toggleHand() {

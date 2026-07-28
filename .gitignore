@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+*.log
+backend/meeting-app-backend/target/
+backend/meeting-app-backend/.mvn/
+backend/meeting-app-backend/mvnw
+backend/meeting-app-backend/mvnw.cmd
