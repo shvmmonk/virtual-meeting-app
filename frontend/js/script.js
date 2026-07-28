@@ -8,6 +8,7 @@ const App = (() => {
     let handRaised = false;
     let chatVisible = true;
     let gridView = false;
+    let cafeView = false;
     let msgCount = 0;
 
     const SIGNALING_URL = 'ws://localhost:8080/ws';
@@ -109,6 +110,7 @@ const App = (() => {
         setupBtn('hand-btn', toggleHand);
         setupBtn('chat-toggle-btn', toggleChat);
         setupBtn('grid-toggle-btn', toggleGrid);
+        setupBtn('cafe-toggle-btn', toggleCafeView);
         setupBtn('chat-send-btn', sendChatMessage);
         setupBtn('leave-btn', leaveMeeting);
         setupBtn('copy-invite-btn', copyInvite);
@@ -166,6 +168,8 @@ const App = (() => {
 
         MeetingScene.init();
         MeetingScene.initWalkers(3);
+        CafeView.init(document.getElementById('cafe-view'));
+        CafeView.setThumbnail(currentUser.avatarThumbnail);
 
         participants = [{ id: userId, name: currentUser.name, muted: false, handUp: false, speaking: false, thumbnail: currentUser.avatarThumbnail }];
         MeetingScene.updateAvatars(participants);
@@ -220,6 +224,7 @@ const App = (() => {
     function renderParticipants() {
         MeetingScene.updateAvatars(participants);
         renderGrid();
+        CafeView.updateParticipants(participants);
         if (isOffline) createOfflineControls();
         document.getElementById('participant-count').textContent = `Participants: ${participants.length}`;
     }
@@ -379,6 +384,13 @@ const App = (() => {
         document.getElementById('grid-toggle-btn').classList.toggle('active-btn', gridView);
     }
 
+    function toggleCafeView() {
+        cafeView = !cafeView;
+        document.getElementById('cafe-view').classList.toggle('hidden', !cafeView);
+        document.getElementById('cafe-toggle-btn').classList.toggle('active-btn', cafeView);
+        CafeView.setActive(cafeView);
+    }
+
     function sendChatMessage() {
         const input = document.getElementById('chat-input');
         const text = input.value.trim();
@@ -431,16 +443,20 @@ const App = (() => {
         isOffline = false;
         handRaised = false;
         gridView = false;
+        cafeView = false;
         document.getElementById('hand-btn').classList.remove('hand-active');
         document.getElementById('offline-badge').style.display = 'none';
         document.getElementById('local-hand-indicator').classList.remove('show');
         document.getElementById('chat-panel').classList.remove('collapsed');
         chatVisible = true;
         document.getElementById('grid-view').classList.add('hidden');
+        document.getElementById('cafe-view').classList.add('hidden');
+        document.getElementById('cafe-toggle-btn').classList.remove('active-btn');
         document.getElementById('chat-messages').innerHTML = '';
         msgCount = 0;
         const row = document.getElementById('offline-controls-row');
         if (row) row.remove();
+        CafeView.reset();
         showScreen('lobby');
         toast('Left the meeting', 'info');
     }
