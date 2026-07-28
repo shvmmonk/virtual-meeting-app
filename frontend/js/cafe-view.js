@@ -6,11 +6,13 @@ const CafeView = (() => {
     let playerThumbnail = null;
     let active = false;
     let animId = null;
+    let localUserId = null;
 
     const ROOM_W = 680, ROOM_H = 460, SIZE = 46;
 
-    function init(containerEl) {
+    function init(containerEl, userId) {
         container = containerEl;
+        localUserId = userId || null;
         container.innerHTML = '';
         container.tabIndex = 0;
 
@@ -77,7 +79,10 @@ const CafeView = (() => {
 
     function ce(tag, attrs) {
         const el = document.createElement(tag);
-        for (const k in attrs) el.setAttribute(k, attrs[k]);
+        for (const k in attrs) {
+            if (k === 'className') el.className = attrs[k];
+            else el.setAttribute(k, attrs[k]);
+        }
         return el;
     }
 
@@ -106,7 +111,7 @@ const CafeView = (() => {
         const names = ['Aman', 'Sara', 'Kabir', 'Neha', 'Raj', 'Maya'];
 
         participants.forEach((p, i) => {
-            if (p.id === document.querySelector('#cafe-player')?.dataset?.userId) return;
+            if (p.id === localUserId) return;
             const color = colors[i % colors.length];
             const name = p.name || names[i % names.length];
             const npcEl = ce('div', {
@@ -183,5 +188,5 @@ const CafeView = (() => {
         if (animId) { cancelAnimationFrame(animId); animId = null; }
     }
 
-    return { init, setThumbnail, updateParticipants, setActive, reset };
+    return { init, setThumbnail, updateParticipants, setActive, reset, setLocalUserId: (id) => { localUserId = id; } };
 })();

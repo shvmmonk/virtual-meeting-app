@@ -168,12 +168,18 @@ const App = (() => {
 
         MeetingScene.init();
         MeetingScene.initWalkers(3);
-        CafeView.init(document.getElementById('cafe-view'));
+        CafeView.init(document.getElementById('cafe-view'), userId);
+        CafeView.setLocalUserId(userId);
         CafeView.setThumbnail(currentUser.avatarThumbnail);
 
         participants = [{ id: userId, name: currentUser.name, muted: false, handUp: false, speaking: false, thumbnail: currentUser.avatarThumbnail }];
         MeetingScene.updateAvatars(participants);
         renderGrid();
+        // Auto-show cafe view
+        document.getElementById('cafe-view').classList.remove('hidden');
+        document.getElementById('cafe-toggle-btn').classList.add('active-btn');
+        cafeView = true;
+        CafeView.setActive(true);
 
         try {
             await Signaling.connect(SIGNALING_URL, roomId, userId);
