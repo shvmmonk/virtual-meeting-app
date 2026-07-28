@@ -644,17 +644,26 @@ body {
     top: 64px;
     left: 50%;
     transform: translateX(-50%);
-    width: 680px;
-    max-width: 94vw;
+    width: 800px;
+    max-width: 96vw;
     height: calc(100vh - 150px);
-    max-height: 460px;
+    max-height: 576px;
     z-index: 2;
-    border-radius: 18px;
+    border-radius: 14px;
     box-shadow: 0 20px 40px rgba(59,43,29,0.18);
+    background: #1a1510;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .cafe-view.hidden {
     display: none;
+}
+
+.cafe-view canvas {
+    display: block;
+    border-radius: 10px;
 }
 
 .cafe-view .cafe-npc,
@@ -1107,7 +1116,7 @@ body {
     .reactions-bar { display: none; }
     .meeting-btn { width: 40px !important; height: 40px !important; font-size: 15px; }
     .grid-view { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-    .cafe-view { max-height: 350px; }
+    .cafe-view { max-height: 350px; max-width: 98vw; }
 }
 
 @media (max-width: 480px) {
@@ -1115,5 +1124,5 @@ body {
     .builder-canvas-container { height: 50vh; }
     .meeting-ui { left: 10px; }
     .local-preview { width: 100px; height: 76px; }
-    .cafe-view { max-height: 250px; }
+    .cafe-view { max-height: 200px; max-width: 98vw; }
 }
