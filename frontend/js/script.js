@@ -7,6 +7,8 @@ const App = (() => {
     let isOffline = false;
     let handRaised = false;
     let chatVisible = true;
+    let gridView = false;
+    let msgCount = 0;
 
     const SIGNALING_URL = 'ws://localhost:8080/ws';
 
@@ -17,16 +19,41 @@ const App = (() => {
     };
 
     function showScreen(name) {
-        Object.values(screens).forEach(s => s.style.display = 'none');
-        screens[name].style.display = 'flex';
+        Object.values(screens).forEach(s => s.classList.remove('active'));
+        screens[name].classList.add('active');
+    }
+
+    function toast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const t = document.createElement('div');
+        t.className = `toast toast-${type}`;
+        t.textContent = message;
+        container.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    function playSound(type) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            gain.gain.value = 0.08;
+            if (type === 'join') { osc.frequency.value = 800; osc.start(); setTimeout(() => { osc.frequency.value = 1000; setTimeout(() => { osc.stop(); ctx.close(); }, 80); }, 80); }
+            else if (type === 'leave') { osc.frequency.value = 600; osc.start(); setTimeout(() => { osc.frequency.value = 400; setTimeout(() => { osc.stop(); ctx.close(); }, 100); }, 100); }
+            else if (type === 'mute') { osc.frequency.value = 500; osc.start(); setTimeout(() => { osc.stop(); ctx.close(); }, 60); }
+            else if (type === 'reaction') { osc.frequency.value = 900; osc.start(); setTimeout(() => { osc.frequency.value = 1200; setTimeout(() => { osc.stop(); ctx.close(); }, 60); }, 60); }
+            else if (type === 'chat') { osc.frequency.value = 600; osc.type = 'sine'; osc.start(); setTimeout(() => { osc.stop(); ctx.close(); }, 80); }
+        } catch (e) {}
     }
 
     function init() {
         showScreen('lobby');
 
-        const defaultCfg = AvatarBuilder.getDefaultConfig();
-        currentUser.avatarConfig = defaultCfg;
-        document.getElementById('lobby-avatar-circle').style.background = defaultCfg.skinColor;
+        const dc = AvatarBuilder.getDefaultConfig();
+        currentUser.avatarConfig = dc;
+        document.getElementById('lobby-avatar-circle').style.background = dc.skinColor;
 
         document.getElementById('username-input').addEventListener('input', (e) => {
             currentUser.name = e.target.value || 'User 1';
@@ -37,33 +64,66 @@ const App = (() => {
             AvatarBuilder.setupBuilder();
         });
 
+        document.getElementById('randomize-btn').addEventListener('click', () => {
+            const r = () => '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
+            const hs = ['short', 'spiky', 'curly', 'long', 'bald'];
+            const es = ['round', 'happy', 'sleepy'];
+            const os = ['casual', 'formal', 'hoodie'];
+            const ac = ['none', 'glasses', 'beanie', 'headphones'];
+
+            document.getElementById('skin-color').value = r();
+            document.getElementById('hair-style').value = hs[Math.floor(Math.random() * hs.length)];
+            document.getElementById('hair-color').value = r();
+            document.getElementById('eye-style').value = es[Math.floor(Math.random() * es.length)];
+            document.getElementById('eye-color').value = r();
+            document.getElementById('outfit-color').value = r();
+            document.getElementById('outfit-style').value = os[Math.floor(Math.random() * os.length)];
+            document.getElementById('accessory').value = ac[Math.floor(Math.random() * ac.length)];
+
+            document.querySelectorAll('#skin-color, #hair-color, #eye-color, #outfit-color').forEach(el => el.dispatchEvent(new Event('input')));
+            document.querySelectorAll('#hair-style, #eye-style, #outfit-style, #accessory').forEach(el => el.dispatchEvent(new Event('change')));
+            toast('Randomized!', 'info');
+        });
+
         document.getElementById('save-avatar-btn').addEventListener('click', () => {
             currentUser.avatarConfig = AvatarBuilder.getConfig();
             currentUser.avatarThumbnail = AvatarBuilder.captureThumbnail();
             updateLobbyPreview();
             showScreen('lobby');
+            toast('Avatar saved!', 'success');
         });
 
         document.getElementById('join-meeting-btn').addEventListener('click', () => {
-            if (!currentUser.avatarThumbnail) {
-                showScreen('builder');
-                return;
-            }
+            if (!currentUser.avatarThumbnail) { showScreen('builder'); return; }
             startMeeting();
         });
 
-        document.getElementById('mic-btn').addEventListener('click', toggleMic);
-        document.getElementById('cam-btn').addEventListener('click', toggleCam);
-        document.getElementById('screen-btn').addEventListener('click', toggleScreenShare);
-        document.getElementById('hand-btn').addEventListener('click', toggleHand);
-        document.getElementById('chat-toggle-btn').addEventListener('click', toggleChat);
-        document.getElementById('chat-send-btn').addEventListener('click', sendChatMessage);
-        document.getElementById('chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
-        document.getElementById('leave-btn').addEventListener('click', leaveMeeting);
+        const setupBtn = (id, fn) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('click', fn);
+        };
+
+        setupBtn('mic-btn', toggleMic);
+        setupBtn('cam-btn', toggleCam);
+        setupBtn('screen-btn', toggleScreenShare);
+        setupBtn('hand-btn', toggleHand);
+        setupBtn('chat-toggle-btn', toggleChat);
+        setupBtn('grid-toggle-btn', toggleGrid);
+        setupBtn('chat-send-btn', sendChatMessage);
+        setupBtn('leave-btn', leaveMeeting);
+        setupBtn('copy-invite-btn', copyInvite);
+        setupBtn('close-invite-btn', () => document.getElementById('invite-modal').classList.remove('show'));
+
+        document.getElementById('chat-input')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
         document.querySelectorAll('.reaction-btn').forEach(btn => {
-            btn.addEventListener('click', () => sendReaction(btn.dataset.emoji));
+            btn.addEventListener('click', () => {
+                sendReaction(btn.dataset.emoji);
+                playSound('reaction');
+            });
         });
+
+        document.getElementById('room-id-display')?.addEventListener('click', showInvite);
 
         Signaling.setHandlers({
             getUserName: () => currentUser.name,
@@ -78,10 +138,10 @@ const App = (() => {
     }
 
     function updateLobbyPreview() {
-        const circle = document.getElementById('lobby-avatar-circle');
+        const c = document.getElementById('lobby-avatar-circle');
         if (currentUser.avatarThumbnail) {
-            circle.classList.add('avatar-img');
-            circle.style.backgroundImage = `url(${currentUser.avatarThumbnail})`;
+            c.classList.add('has-img');
+            c.style.backgroundImage = `url(${currentUser.avatarThumbnail})`;
         }
     }
 
@@ -90,10 +150,12 @@ const App = (() => {
         userId = 'user-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
 
         showScreen('meeting');
-        document.getElementById('room-id-display').textContent = 'Room: ' + roomId;
-        document.getElementById('local-avatar-circle').style.backgroundImage = `url(${currentUser.avatarThumbnail})`;
-        document.getElementById('local-avatar-circle').style.backgroundSize = 'cover';
-        document.getElementById('local-avatar-circle').style.backgroundPosition = 'center';
+        document.getElementById('room-id-display').innerHTML = `📋 ${roomId}`;
+        const lc = document.getElementById('local-avatar-circle');
+        lc.style.backgroundImage = `url(${currentUser.avatarThumbnail})`;
+        lc.style.backgroundSize = 'cover';
+        lc.style.backgroundPosition = 'center';
+        lc.style.borderRadius = '50%';
 
         WebRTCManager.init(userId);
         const stream = await WebRTCManager.startLocalMedia(true, true);
@@ -103,33 +165,25 @@ const App = (() => {
         }
 
         MeetingScene.init();
-        participants = [{
-            id: userId,
-            name: currentUser.name,
-            muted: false,
-            handUp: false,
-            thumbnail: currentUser.avatarThumbnail
-        }];
+
+        participants = [{ id: userId, name: currentUser.name, muted: false, handUp: false, speaking: false, thumbnail: currentUser.avatarThumbnail }];
         MeetingScene.updateAvatars(participants);
+        renderGrid();
 
         try {
             await Signaling.connect(SIGNALING_URL, roomId, userId);
             isOffline = false;
+            toast('Connected to signaling server', 'success');
         } catch (e) {
             isOffline = true;
             document.getElementById('offline-badge').style.display = 'inline';
+            toast('Running in offline mode', 'info');
         }
         renderParticipants();
     }
 
-    function handleParticipantsUpdate(participantList) {
-        participants = participantList.map(p => ({
-            id: p.userId,
-            name: p.userName,
-            muted: false,
-            handUp: false,
-            thumbnail: null
-        }));
+    function handleParticipantsUpdate(list) {
+        participants = list.map(p => ({ id: p.userId, name: p.userName, muted: false, handUp: false, speaking: false, thumbnail: null }));
         const me = participants.find(p => p.id === userId);
         if (me) me.thumbnail = currentUser.avatarThumbnail;
         renderParticipants();
@@ -137,85 +191,96 @@ const App = (() => {
 
     function handlePeerJoined(data) {
         if (!participants.find(p => p.id === data.userId)) {
-            participants.push({ id: data.userId, name: data.userName || 'Guest', muted: false, handUp: false, thumbnail: null });
+            participants.push({ id: data.userId, name: data.userName || 'Guest', muted: false, handUp: false, speaking: false, thumbnail: null });
             renderParticipants();
-            setTimeout(() => WebRTCManager.createOffer(data.userId, getRemoteVideo(data.userId)), 500);
+            toast(`${data.userName || 'Someone'} joined`, 'success');
+            playSound('join');
+            setTimeout(() => WebRTCManager.createOffer(data.userId, null), 500);
         }
     }
 
     function handlePeerLeft(data) {
-        participants = participants.filter(p => p.id !== data.userId);
+        const p = participants.find(x => x.id === data.userId);
+        participants = participants.filter(x => x.id !== data.userId);
         WebRTCManager.closePeerConnection(data.userId);
         renderParticipants();
+        if (p) { toast(`${p.name} left`, 'info'); playSound('leave'); }
     }
 
-    function handleOffer(data) {
-        WebRTCManager.handleOffer(data.fromUserId, data.offer, getRemoteVideo(data.fromUserId));
-    }
-
-    function handleAnswer(data) {
-        WebRTCManager.handleAnswer(data.fromUserId, data.answer);
-    }
-
-    function handleIceCandidate(data) {
-        WebRTCManager.handleIceCandidate(data.fromUserId, data.candidate);
-    }
+    function handleOffer(data) { WebRTCManager.handleOffer(data.fromUserId, data.offer, null); }
+    function handleAnswer(data) { WebRTCManager.handleAnswer(data.fromUserId, data.answer); }
+    function handleIceCandidate(data) { WebRTCManager.handleIceCandidate(data.fromUserId, data.candidate); }
 
     function handlePeerMute(data) {
         const p = participants.find(x => x.id === data.userId);
         if (p) p.muted = data.muted;
     }
 
-    function getRemoteVideo(userId) {
-        return null;
-    }
-
     function renderParticipants() {
         MeetingScene.updateAvatars(participants);
-        if (isOffline) {
-            const controlsRow = document.getElementById('offline-controls-row');
-            if (!controlsRow) {
-                const row = document.createElement('div');
-                row.id = 'offline-controls-row';
-                row.style.cssText = 'position:absolute;bottom:100px;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:12px;';
-                row.innerHTML = `
-                    <button class="btn btn-secondary" id="offline-add-btn" style="width:auto;padding:10px 20px;">+ Add</button>
-                    <button class="btn btn-danger" id="offline-remove-btn" style="width:auto;padding:10px 20px;">- Remove</button>
-                `;
-                document.querySelector('.meeting-overlay').appendChild(row);
-                document.getElementById('offline-add-btn').onclick = addLocalParticipant;
-                document.getElementById('offline-remove-btn').onclick = removeLocalParticipant;
-            }
-        }
+        renderGrid();
+        if (isOffline) createOfflineControls();
         document.getElementById('participant-count').textContent = `Participants: ${participants.length}`;
     }
 
-    function updateMuteIcon(userId, muted) {
-        const chair = document.querySelector(`.chair[data-id="${userId}"]`);
-        if (chair) {
-            const btn = chair.querySelector('.mute-btn');
-            if (btn) btn.textContent = muted ? '🔇' : '🎤';
+    function renderGrid() {
+        const grid = document.getElementById('grid-view');
+        grid.innerHTML = '';
+        participants.forEach((p, i) => {
+            const card = document.createElement('div');
+            card.className = 'grid-chair';
+            if (p.speaking) card.classList.add('speaking');
+            if (p.handUp) card.classList.add('hand-raised');
+
+            const initial = p.name.charAt(0).toUpperCase();
+            const img = p.thumbnail ? `<img src="${p.thumbnail}" alt="${p.name}" />` : `<div class="initial">${initial}</div>`;
+
+            card.innerHTML = `
+                <div class="avatar">${img}</div>
+                <div class="name">${p.name}</div>
+                <div class="status">${p.muted ? '🔇' : '🎤'}</div>
+                <div class="hand-icon">✋</div>
+            `;
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.grid-chair').forEach(c => c.classList.remove('speaking'));
+                card.classList.add('speaking');
+                MeetingScene.highlightSpeaker(i);
+            });
+            grid.appendChild(card);
+        });
+    }
+
+    function createOfflineControls() {
+        let row = document.getElementById('offline-controls-row');
+        if (!row) {
+            row = document.createElement('div');
+            row.id = 'offline-controls-row';
+            row.innerHTML = `
+                <button class="btn btn-secondary btn-sm" id="offline-add-btn">+ Add</button>
+                <button class="btn btn-danger btn-sm" id="offline-remove-btn">- Remove</button>
+            `;
+            document.querySelector('.meeting-overlay').appendChild(row);
+            document.getElementById('offline-add-btn').onclick = addLocalParticipant;
+            document.getElementById('offline-remove-btn').onclick = removeLocalParticipant;
         }
     }
 
     function addLocalParticipant() {
         const count = participants.length;
-        const randomFrom = arr => arr[Math.floor(Math.random() * arr.length)];
-        const colors = ['#f5cba7', '#d4a574', '#c68642', '#8d5524', '#e0ac69', '#f1c27d', '#ffdab9', '#dbb88c'];
-        participants.push({
-            id: 'local-' + Date.now() + '-' + count,
-            name: `Guest ${count}`,
-            muted: false,
-            handUp: Math.random() > 0.7
-        });
+        participants.push({ id: 'local-' + Date.now() + '-' + count, name: `Guest ${count}`, muted: Math.random() > 0.7, handUp: Math.random() > 0.8, speaking: false, thumbnail: null });
         renderParticipants();
+        toast('Guest joined', 'success');
+        playSound('join');
     }
 
     function removeLocalParticipant() {
         const locals = participants.filter(p => p.id !== userId);
         if (locals.length > 0) {
-            participants = participants.filter(p => p.id !== locals[locals.length - 1].id);
+            const removed = locals[locals.length - 1];
+            participants = participants.filter(p => p.id !== removed.id);
             renderParticipants();
+            toast(`${removed.name} left`, 'info');
+            playSound('leave');
         }
     }
 
@@ -223,35 +288,31 @@ const App = (() => {
         if (isOffline) {
             const me = participants.find(p => p.id === userId);
             if (me) { me.muted = !me.muted; renderParticipants(); }
+            document.getElementById('mic-btn').classList.toggle('active-btn', isOffline ? participants.find(p => p.id === userId)?.muted : false);
             return;
         }
         const muted = !WebRTCManager.isAudioMuted();
         WebRTCManager.toggleAudio(muted);
         document.getElementById('mic-btn').textContent = muted ? '🔇' : '🎤';
+        document.getElementById('mic-btn').classList.toggle('active-btn', muted);
         Signaling.sendMuteStatus(!muted);
+        playSound('mute');
     }
 
     function toggleCam() {
         if (isOffline) return;
-        const video = document.getElementById('local-video');
-        const on = video.hidden;
+        const v = document.getElementById('local-video');
+        const on = v.hidden;
         WebRTCManager.toggleVideo(on);
-        video.hidden = !on;
-        document.getElementById('cam-btn').textContent = on ? '📷' : '🚫';
+        v.hidden = !on;
+        document.getElementById('cam-btn').classList.toggle('active-btn', !on);
     }
 
     let isSharing = false;
-
     async function toggleScreenShare() {
         if (isOffline) return;
-        if (isSharing) {
-            WebRTCManager.stopScreenShare();
-            isSharing = false;
-            document.getElementById('screen-btn').textContent = '🖥️';
-        } else {
-            const stream = await WebRTCManager.startScreenShare();
-            if (stream) { isSharing = true; document.getElementById('screen-btn').textContent = '⏹️'; }
-        }
+        if (isSharing) { WebRTCManager.stopScreenShare(); isSharing = false; document.getElementById('screen-btn').textContent = '🖥️'; document.getElementById('screen-btn').classList.remove('active-btn'); }
+        else { const s = await WebRTCManager.startScreenShare(); if (s) { isSharing = true; document.getElementById('screen-btn').textContent = '⏹️'; document.getElementById('screen-btn').classList.add('active-btn'); } }
     }
 
     function toggleHand() {
@@ -269,24 +330,30 @@ const App = (() => {
         document.getElementById('chat-panel').classList.toggle('collapsed', !chatVisible);
     }
 
+    function toggleGrid() {
+        gridView = !gridView;
+        document.getElementById('grid-view').classList.toggle('hidden', !gridView);
+        document.getElementById('grid-toggle-btn').classList.toggle('active-btn', gridView);
+    }
+
     function sendChatMessage() {
         const input = document.getElementById('chat-input');
         const text = input.value.trim();
         if (!text) return;
         input.value = '';
         addChatMessage(currentUser.name, text, true);
-        if (!isOffline) {
-            // In real mode would broadcast via WebSocket
-        }
+        playSound('chat');
+        toast('Message sent', 'info');
     }
 
     function addChatMessage(sender, text, isOwn) {
-        const container = document.getElementById('chat-messages');
-        const msg = document.createElement('div');
-        msg.className = 'chat-msg ' + (isOwn ? 'own' : 'other');
-        msg.innerHTML = `<div class="msg-sender">${sender}</div><div>${text}</div>`;
-        container.appendChild(msg);
-        container.scrollTop = container.scrollHeight;
+        const c = document.getElementById('chat-messages');
+        const m = document.createElement('div');
+        m.className = 'chat-msg ' + (isOwn ? 'own' : 'other');
+        m.innerHTML = `<div class="msg-sender">${sender}</div><div>${text}</div>`;
+        c.appendChild(m);
+        c.scrollTop = c.scrollHeight;
+        document.getElementById('chat-count').textContent = `${++msgCount} messages`;
     }
 
     function sendReaction(emoji) {
@@ -294,9 +361,23 @@ const App = (() => {
         el.className = 'reaction-float';
         el.textContent = emoji;
         el.style.left = (Math.random() * 60 + 20) + '%';
-        el.style.bottom = '80px';
+        el.style.bottom = '100px';
         document.body.appendChild(el);
         setTimeout(() => el.remove(), 2000);
+    }
+
+    function showInvite() {
+        const input = document.getElementById('invite-link-input');
+        const url = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+        input.value = url;
+        document.getElementById('invite-modal').classList.add('show');
+    }
+
+    function copyInvite() {
+        const input = document.getElementById('invite-link-input');
+        input.select();
+        navigator.clipboard.writeText(input.value);
+        toast('Link copied!', 'success');
     }
 
     function leaveMeeting() {
@@ -306,15 +387,19 @@ const App = (() => {
         isInMeeting = false;
         isOffline = false;
         handRaised = false;
+        gridView = false;
         document.getElementById('hand-btn').classList.remove('hand-active');
         document.getElementById('offline-badge').style.display = 'none';
         document.getElementById('local-hand-indicator').classList.remove('show');
         document.getElementById('chat-panel').classList.remove('collapsed');
         chatVisible = true;
+        document.getElementById('grid-view').classList.add('hidden');
         document.getElementById('chat-messages').innerHTML = '';
+        msgCount = 0;
         const row = document.getElementById('offline-controls-row');
         if (row) row.remove();
         showScreen('lobby');
+        toast('Left the meeting', 'info');
     }
 
     document.addEventListener('DOMContentLoaded', init);
