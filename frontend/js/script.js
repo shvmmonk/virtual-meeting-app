@@ -9,6 +9,7 @@ const App = (() => {
     let chatVisible = true;
     let gridView = false;
     let cafeView = false;
+    let bitmojiView = false;
     let msgCount = 0;
 
     const SIGNALING_URL = 'ws://localhost:8080/ws';
@@ -111,6 +112,7 @@ const App = (() => {
         setupBtn('chat-toggle-btn', toggleChat);
         setupBtn('grid-toggle-btn', toggleGrid);
         setupBtn('cafe-toggle-btn', toggleCafeView);
+        setupBtn('bitmoji-toggle-btn', toggleBitmojiRoom);
         setupBtn('chat-send-btn', sendChatMessage);
         setupBtn('leave-btn', leaveMeeting);
         setupBtn('copy-invite-btn', copyInvite);
@@ -171,6 +173,8 @@ const App = (() => {
         CafeView.init(document.getElementById('cafe-view'), userId);
         CafeView.setLocalUserId(userId);
         CafeView.setThumbnail(currentUser.avatarThumbnail);
+        BitmojiRoom.init(document.getElementById('bitmoji-room'));
+        BitmojiRoom.setThumbnail(currentUser.avatarThumbnail);
 
         participants = [{ id: userId, name: currentUser.name, muted: false, handUp: false, speaking: false, thumbnail: currentUser.avatarThumbnail }];
         MeetingScene.updateAvatars(participants);
@@ -180,6 +184,9 @@ const App = (() => {
         document.getElementById('cafe-toggle-btn').classList.add('active-btn');
         cafeView = true;
         CafeView.setActive(true);
+
+        // Also init bitmoji room but keep hidden
+        document.getElementById('bitmoji-room').classList.add('hidden');
 
         try {
             await Signaling.connect(SIGNALING_URL, roomId, userId);
@@ -397,6 +404,13 @@ const App = (() => {
         CafeView.setActive(cafeView);
     }
 
+    function toggleBitmojiRoom() {
+        bitmojiView = !bitmojiView;
+        document.getElementById('bitmoji-room').classList.toggle('hidden', !bitmojiView);
+        document.getElementById('bitmoji-toggle-btn').classList.toggle('active-btn', bitmojiView);
+        BitmojiRoom.setActive(bitmojiView);
+    }
+
     function sendChatMessage() {
         const input = document.getElementById('chat-input');
         const text = input.value.trim();
@@ -450,6 +464,7 @@ const App = (() => {
         handRaised = false;
         gridView = false;
         cafeView = false;
+        bitmojiView = false;
         document.getElementById('hand-btn').classList.remove('hand-active');
         document.getElementById('offline-badge').style.display = 'none';
         document.getElementById('local-hand-indicator').classList.remove('show');
@@ -458,11 +473,14 @@ const App = (() => {
         document.getElementById('grid-view').classList.add('hidden');
         document.getElementById('cafe-view').classList.add('hidden');
         document.getElementById('cafe-toggle-btn').classList.remove('active-btn');
+        document.getElementById('bitmoji-room').classList.add('hidden');
+        document.getElementById('bitmoji-toggle-btn').classList.remove('active-btn');
         document.getElementById('chat-messages').innerHTML = '';
         msgCount = 0;
         const row = document.getElementById('offline-controls-row');
         if (row) row.remove();
         CafeView.reset();
+        BitmojiRoom.reset();
         showScreen('lobby');
         toast('Left the meeting', 'info');
     }
