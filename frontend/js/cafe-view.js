@@ -18,73 +18,74 @@ const CafeView = (() => {
 
     const rooms = {
         cafe: {
-            label: 'Cafe Lounge',
-            bg: '#e7d3b1', grid: null,
-            spawn: { x: 8, y: 13 },
+            label: 'Cozy Room',
+            bg: '#f5e6d0', grid: null,
+            spawn: { x: 8, y: 11 },
             doors: [{ x: 22, y: 8, target: 'meeting', spawn: { x: 2, y: 8 } }]
         },
         meeting: {
-            label: 'Meeting Room',
-            bg: '#d8cfc0', grid: null,
+            label: 'Activity Room',
+            bg: '#e8f0e8', grid: null,
             spawn: { x: 2, y: 8 },
             doors: [{ x: 0, y: 8, target: 'cafe', spawn: { x: 21, y: 8 } }]
         }
     };
 
-    const T = { FLOOR:0, WALL:1, TABLE:2, PLANT:3, RUG:4, DOOR:5, CHAIR:6, COUCH:7, DESK:8 };
+    const T = { FLOOR:0, WALL:1, TABLE:2, PLANT:3, RUG:4, DOOR:5, CHAIR:6, COUCH:7, DESK:8, SHELF:9, LAMP:10 };
 
     function buildGrid(roomName) {
         const g = Array.from({length:ROWS}, () => Array(COLS).fill(T.FLOOR));
         if (roomName === 'cafe') {
-            // walls
             for (let i=0;i<COLS;i++) { g[0][i]=T.WALL; g[ROWS-1][i]=T.WALL; }
             for (let i=0;i<ROWS;i++) { g[i][0]=T.WALL; g[i][COLS-1]=T.WALL; }
 
-            // door to meeting room (right side)
             g[8][COLS-1] = T.DOOR;
 
-            // tables
-            placeRect(g, 5, 6, 4, 2, T.TABLE);
-            placeRect(g, 13, 3, 2, 2, T.TABLE);
-            placeRect(g, 12, 11, 3, 2, T.TABLE);
+            // Large cozy rug
+            placeRect(g, 5, 5, 8, 6, T.RUG);
+            placeRect(g, 17, 2, 4, 5, T.RUG);
 
-            // rug areas
-            placeRect(g, 5, 5, 4, 4, T.RUG);
-            placeRect(g, 12, 10, 3, 4, T.RUG);
+            // Desk with lamp
+            placeRect(g, 5, 3, 3, 2, T.DESK);
+            g[4][5] = T.LAMP;
 
-            // plants
-            g[2][2] = T.PLANT; g[2][COLS-3] = T.PLANT; g[ROWS-3][2] = T.PLANT;
+            // Bookshelf
+            placeRect(g, 2, 9, 2, 3, T.SHELF);
 
-            // chairs around table1
-            g[5][5]=T.CHAIR; g[5][8]=T.CHAIR; g[8][5]=T.CHAIR; g[8][8]=T.CHAIR;
+            // Round table
+            placeRect(g, 10, 10, 3, 3, T.TABLE);
+            g[10][10]=T.CHAIR; g[10][12]=T.CHAIR; g[12][10]=T.CHAIR; g[12][12]=T.CHAIR;
 
-            // couch
-            placeRect(g, 3, 13, 3, 1, T.COUCH);
+            // Cozy couch
+            placeRect(g, 2, 15, 4, 1, T.COUCH);
 
-            // desk area
-            placeRect(g, 16, 3, 2, 1, T.DESK);
+            // Plants
+            g[3][20] = T.PLANT; g[2][2] = T.PLANT; g[ROWS-3][COLS-4] = T.PLANT;
         } else if (roomName === 'meeting') {
             for (let i=0;i<COLS;i++) { g[0][i]=T.WALL; g[ROWS-1][i]=T.WALL; }
             for (let i=0;i<ROWS;i++) { g[i][0]=T.WALL; g[i][COLS-1]=T.WALL; }
 
-            // door back to cafe (left side)
             g[8][0] = T.DOOR;
 
-            // conference table
-            placeRect(g, 8, 7, 6, 3, T.TABLE);
+            // Activity table
+            placeRect(g, 8, 6, 6, 4, T.TABLE);
+            g[7][8]=T.CHAIR; g[7][13]=T.CHAIR; g[11][8]=T.CHAIR; g[11][13]=T.CHAIR;
 
-            // chairs around table
-            g[7][8]=T.CHAIR; g[7][11]=T.CHAIR; g[10][8]=T.CHAIR; g[10][11]=T.CHAIR;
-            g[8][6]=T.CHAIR; g[8][12]=T.CHAIR; g[9][6]=T.CHAIR; g[9][12]=T.CHAIR;
-
-            // smart board
-            g[4][12] = T.DESK;
-
-            // rug
+            // Rug
             placeRect(g, 8, 8, 6, 2, T.RUG);
 
-            // plants
-            g[2][2] = T.PLANT; g[ROWS-3][COLS-3] = T.PLANT;
+            // Desks
+            placeRect(g, 3, 2, 2, 2, T.DESK);
+            placeRect(g, 18, 2, 2, 2, T.DESK);
+
+            // Lamps
+            g[3][3] = T.LAMP; g[18][3] = T.LAMP;
+
+            // Plants
+            g[2][COLS-3] = T.PLANT; g[ROWS-3][2] = T.PLANT;
+
+            // Shelf
+            placeRect(g, 18, 12, 2, 3, T.SHELF);
         }
         return g;
     }
@@ -96,15 +97,17 @@ const CafeView = (() => {
     }
 
     const tileColors = {
-        [T.FLOOR]: ['#e7d3b1','#ddc39d'],
-        [T.WALL]: '#8b7355',
-        [T.TABLE]: '#8a5a37',
-        [T.PLANT]: '#5f8f5b',
-        [T.RUG]: '#c9705a',
-        [T.DOOR]: '#6e8b3a',
-        [T.CHAIR]: '#a0845c',
+        [T.FLOOR]: ['#f5e6d0','#f0dfc0'],
+        [T.WALL]: '#e8d4b8',
+        [T.TABLE]: '#b8864e',
+        [T.PLANT]: '#7aad6e',
+        [T.RUG]: '#c97d63',
+        [T.DOOR]: '#8ba86e',
+        [T.CHAIR]: '#c4a882',
         [T.COUCH]: '#7a9e7e',
-        [T.DESK]: '#6b5d4b'
+        [T.DESK]: '#8a7358',
+        [T.SHELF]: '#8b6b4b',
+        [T.LAMP]: '#f0d890'
     };
 
     function init(containerEl, userId) {
@@ -125,19 +128,19 @@ const CafeView = (() => {
         // Room label
         const label = document.createElement('div');
         label.id = 'cafe-room-label';
-        label.style.cssText = 'position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(59,43,29,0.85);color:#fff;padding:6px 18px;border-radius:100px;font-size:13px;font-weight:600;z-index:20;pointer-events:none;backdrop-filter:blur(6px);';
+        label.style.cssText = 'position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(180,150,120,0.85);color:#fff;padding:5px 18px;border-radius:100px;font-size:12px;font-weight:600;z-index:20;pointer-events:none;backdrop-filter:blur(6px);box-shadow:0 2px 8px rgba(0,0,0,0.15);letter-spacing:0.5px;';
         container.appendChild(label);
 
         // Proximity popup
         const popup = document.createElement('div');
         popup.id = 'cafe-proximity-popup';
-        popup.style.cssText = 'position:absolute;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);border-radius:16px;padding:10px 16px;z-index:20;display:none;gap:8px;align-items:center;pointer-events:none;color:#fff;font-size:13px;border:1px solid rgba(255,255,255,0.1);';
+        popup.style.cssText = 'position:absolute;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(180,150,120,0.9);backdrop-filter:blur(12px);border-radius:16px;padding:10px 18px;z-index:20;display:none;gap:8px;align-items:center;pointer-events:none;color:#fff;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,0.2);';
         container.appendChild(popup);
 
         // Hint
         const hint = document.createElement('div');
-        hint.style.cssText = 'position:absolute;bottom:8px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.4);font-size:10px;z-index:20;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.5);';
-        hint.textContent = 'WASD / Arrow keys to walk  •  Walk near people to connect';
+        hint.style.cssText = 'position:absolute;bottom:8px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.35);font-size:10px;z-index:20;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.5);';
+        hint.textContent = 'WASD / Arrow keys to walk  •  Walk through 🚪 doors  •  Explore!';
         container.appendChild(hint);
 
         for (const name in rooms) rooms[name].grid = buildGrid(name);
@@ -389,8 +392,11 @@ const CafeView = (() => {
                     ctx.fillStyle = tileColors[t] || '#ccc';
                     ctx.fillRect(px, py, TILE, TILE);
                     if (t === T.RUG) {
-                        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+                        ctx.fillStyle = 'rgba(220,180,160,0.5)';
                         ctx.fillRect(px+2, py+2, TILE-4, TILE-4);
+                        // Fringe
+                        ctx.fillStyle = 'rgba(200,160,140,0.4)';
+                        ctx.fillRect(px+1, py+TILE-3, TILE-2, 2);
                     }
                 }
             }
@@ -402,48 +408,115 @@ const CafeView = (() => {
                 const t = grid[y][x];
                 const px = x * TILE, py = y * TILE;
                 if (t === T.DOOR) {
-                    ctx.fillStyle = 'rgba(110,139,58,0.3)';
-                    ctx.fillRect(px, py, TILE, TILE);
-                    ctx.strokeStyle = '#6e8b3a';
+                    ctx.fillStyle = 'rgba(139,168,110,0.25)';
+                    ctx.fillRect(px+2, py+2, TILE-4, TILE-4);
+                    ctx.strokeStyle = '#8ba86e';
                     ctx.lineWidth = 1;
                     ctx.setLineDash([3,3]);
                     ctx.strokeRect(px+3, py+3, TILE-6, TILE-6);
                     ctx.setLineDash([]);
+                    // Door icon
+                    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                    ctx.font = '14px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('🚪', px+TILE/2, py+TILE/2);
                 }
                 if (t === T.TABLE) {
-                    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                    ctx.fillStyle = '#b8864e';
                     ctx.beginPath();
-                    ctx.arc(px+TILE/2, py+TILE/2, TILE/2-3, 0, Math.PI*2);
+                    ctx.arc(px+TILE/2, py+TILE/2-1, 9, 0, Math.PI*2);
                     ctx.fill();
+                    ctx.strokeStyle = '#a07040';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
                 }
                 if (t === T.PLANT) {
-                    ctx.fillStyle = '#5f8f5b';
+                    // Pot
+                    ctx.fillStyle = '#c0845c';
                     ctx.beginPath();
-                    ctx.arc(px+TILE/2, py+TILE/2-2, 6, 0, Math.PI*2);
+                    ctx.moveTo(px+TILE/2-5, py+TILE/2+6);
+                    ctx.lineTo(px+TILE/2+5, py+TILE/2+6);
+                    ctx.lineTo(px+TILE/2+3, py+TILE/2);
+                    ctx.lineTo(px+TILE/2-3, py+TILE/2);
+                    ctx.closePath();
                     ctx.fill();
-                    ctx.fillStyle = '#8b6b4b';
-                    ctx.fillRect(px+TILE/2-3, py+TILE/2+2, 6, 5);
+                    // Leaves
+                    ctx.fillStyle = '#7aad6e';
+                    ctx.beginPath();
+                    ctx.arc(px+TILE/2, py+TILE/2-3, 6, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.fillStyle = '#8abd7e';
+                    ctx.beginPath();
+                    ctx.arc(px+TILE/2-2, py+TILE/2-5, 3, 0, Math.PI*2);
+                    ctx.fill();
                 }
                 if (t === T.CHAIR) {
-                    ctx.fillStyle = '#a0845c';
-                    ctx.fillRect(px+6, py+6, TILE-12, TILE-12);
+                    ctx.fillStyle = '#c4a882';
+                    const s = 6;
+                    ctx.roundRect(px+s, py+s, TILE-s*2, TILE-s*2, 3);
+                    ctx.fill();
+                    ctx.strokeStyle = '#a08868';
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
                 }
                 if (t === T.COUCH) {
-                    ctx.fillStyle = '#6a8e6e';
-                    ctx.fillRect(px+2, py+4, TILE-4, TILE-8);
-                    ctx.fillStyle = '#5a7e5e';
-                    ctx.fillRect(px+2, py+4, TILE-4, 5);
+                    ctx.fillStyle = '#7a9e7e';
+                    ctx.roundRect(px+2, py+4, TILE-4, TILE-8, 4);
+                    ctx.fill();
+                    ctx.fillStyle = '#8aae8e';
+                    ctx.fillRect(px+4, py+2, TILE-8, 4);
                 }
                 if (t === T.DESK) {
-                    ctx.fillStyle = '#5a4c3a';
-                    ctx.fillRect(px+2, py+4, TILE-4, 6);
-                    ctx.fillStyle = '#4a3c2a';
-                    ctx.fillRect(px+4, py+10, TILE-8, TILE-12);
+                    ctx.fillStyle = '#8a7358';
+                    ctx.roundRect(px+2, py+4, TILE-4, 6, 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#7a6348';
+                    ctx.fillRect(px+5, py+10, TILE-10, TILE-14);
+                    // Item on desk
+                    ctx.fillStyle = '#e8d8c0';
+                    ctx.fillRect(px+8, py+6, 5, 4);
+                }
+                if (t === T.SHELF) {
+                    ctx.fillStyle = '#8b6b4b';
+                    ctx.fillRect(px+2, py+2, TILE-4, 4);
+                    ctx.fillRect(px+2, py+TILE/2-2, TILE-4, 4);
+                    ctx.fillRect(px+2, py+TILE-6, TILE-4, 4);
+                    // Books
+                    const bookColors = ['#c0392b','#2980b9','#8e44ad','#27ae60'];
+                    for (let b=0; b<3; b++) {
+                        ctx.fillStyle = bookColors[b % bookColors.length];
+                        ctx.fillRect(px+4+b*8, py+8, 6, TILE/2-12);
+                    }
+                }
+                if (t === T.LAMP) {
+                    // Base
+                    ctx.fillStyle = '#8a7a6a';
+                    ctx.fillRect(px+TILE/2-2, py+TILE-6, 4, 4);
+                    // Stem
+                    ctx.fillStyle = '#a09080';
+                    ctx.fillRect(px+TILE/2-1, py+8, 2, TILE-16);
+                    // Shade
+                    ctx.fillStyle = '#f0d890';
+                    ctx.beginPath();
+                    ctx.moveTo(px+TILE/2-6, py+8);
+                    ctx.lineTo(px+TILE/2+6, py+8);
+                    ctx.lineTo(px+TILE/2+4, py+2);
+                    ctx.lineTo(px+TILE/2-4, py+2);
+                    ctx.closePath();
+                    ctx.fill();
+                    // Glow
+                    ctx.fillStyle = 'rgba(240,216,144,0.12)';
+                    ctx.beginPath();
+                    ctx.arc(px+TILE/2, py+4, 10, 0, Math.PI*2);
+                    ctx.fill();
                 }
                 if (t === T.WALL) {
-                    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(px, py, TILE, TILE);
+                    ctx.fillStyle = 'rgba(210,190,165,0.3)';
+                    ctx.fillRect(px, py, TILE, TILE);
+                    // Subtle wallpaper line
+                    ctx.fillStyle = 'rgba(200,180,155,0.2)';
+                    ctx.fillRect(px, py+TILE/2-1, TILE, 1);
                 }
             }
         }
